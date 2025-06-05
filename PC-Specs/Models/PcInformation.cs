@@ -25,12 +25,24 @@ namespace PC_Specs.Models
         // List of storage devices
         public List<StorageInfo> StorageDevices { get; set; }
 
+        // List of network adapters
+        public List<NetworkAdapterInfo> NetworkAdapters { get; set; }
+
+        // List of audio devices
+        public List<AudioDeviceInfo> AudioDevices { get; set; }
+
+        // List of monitors
+        public List<MonitorInfo> Monitors { get; set; }
+
         // Constructor initializes lists to avoid null references
         public PcInformation()
         {
             RamModules = new List<RamModuleInfo>();
             Gpus = new List<GpuInfo>();
             StorageDevices = new List<StorageInfo>();
+            NetworkAdapters = new List<NetworkAdapterInfo>();
+            AudioDevices = new List<AudioDeviceInfo>();
+            Monitors = new List<MonitorInfo>();
         }
     }
 }

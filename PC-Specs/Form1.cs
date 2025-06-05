@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Windows.Forms;
+using PC_Specs.Models;
+using PC_Specs.Services;
 
 namespace PC_Specs
 {
