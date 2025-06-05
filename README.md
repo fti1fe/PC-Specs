@@ -1,4 +1,4 @@
-# PC Hardware Specification Tool
+# PC Hardware Specification Tool Alpha
 
 ## Overview
 This Windows application retrieves and displays detailed hardware specifications of a computer system using Windows Management Instrumentation (WMI). Built with C# and .NET, it provides comprehensive information about key components including CPU, RAM, GPU, storage devices, motherboard, and operating system.
