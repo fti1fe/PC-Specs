@@ -18,7 +18,7 @@ namespace PC_Specs
 
         private void InitializeCustomUi()
         {
-            // Button zum Laden der Daten
+            // Button to load hardware data
             btnLoadSpecs = new Button
             {
                 Text = "Load Specs",
@@ -29,7 +29,7 @@ namespace PC_Specs
             btnLoadSpecs.Click += BtnLoadSpecs_Click;
             this.Controls.Add(btnLoadSpecs);
 
-            // Große TextBox zur Anzeige der Daten
+            // Large TextBox to display hardware data
             txtOutput = new TextBox
             {
                 Multiline = true,
