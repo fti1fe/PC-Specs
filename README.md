@@ -13,4 +13,5 @@ This Windows application retrieves and displays detailed hardware specifications
   - Storage devices (capacity, interface type)
   - Motherboard information
   - Operating system details
+  - (and more)
 - Byte size formatting for human-readable output
