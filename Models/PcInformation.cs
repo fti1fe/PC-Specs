@@ -8,13 +8,13 @@ namespace PC_Specs.Models
     public class PcInformation
     {
         // Operating system info
-        public OperatingSystemInfo OS { get; set; }
+        public OperatingSystemInfo OperatingSystem { get; set; }
 
         // CPU info
         public CpuInfo Cpu { get; set; }
 
         // Mainboard info
-        public MainBoardInfo Mainboard { get; set; }
+        public MainBoardInfo MainBoard { get; set; }
 
         // List of RAM modules
         public List<RamModuleInfo> RamModules { get; set; }
