@@ -182,6 +182,80 @@ namespace PC_Specs.Services
             return null;
         }
 
+        public List<NetworkAdapterInfo> GetNetworkAdapterDetails()
+        {
+            var adapters = new List<NetworkAdapterInfo>();
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher("select * from Win32_NetworkAdapter where PhysicalAdapter = true"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        adapters.Add(new NetworkAdapterInfo
+                        {
+                            Name = obj["Name"]?.ToString(),
+                            Manufacturer = obj["Manufacturer"]?.ToString(),
+                            MacAddress = obj["MACAddress"]?.ToString(),
+                            AdapterType = obj["AdapterType"]?.ToString(),
+                            // IP-Adresse ist nicht direkt in Win32_NetworkAdapter, daher leer lassen oder erweitern
+                            IpAddress = null
+                        });
+                    }
+                }
+            }
+            catch { }
+            return adapters;
+        }
+
+        public List<AudioDeviceInfo> GetAudioDeviceDetails()
+        {
+            var devices = new List<AudioDeviceInfo>();
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher("select * from Win32_SoundDevice"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        devices.Add(new AudioDeviceInfo
+                        {
+                            Name = obj["Name"]?.ToString(),
+                            Manufacturer = obj["Manufacturer"]?.ToString(),
+                            DeviceType = "Output", // Win32_SoundDevice liefert keine Typen, daher als "Output" markieren
+                            DeviceId = obj["DeviceID"]?.ToString()
+                        });
+                    }
+                }
+            }
+            catch { }
+            return devices;
+        }
+
+        public List<MonitorInfo> GetMonitorDetails()
+        {
+            var monitors = new List<MonitorInfo>();
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher("select * from Win32_DesktopMonitor"))
+                {
+                    foreach (ManagementObject obj in searcher.Get())
+                    {
+                        monitors.Add(new MonitorInfo
+                        {
+                            Name = obj["Name"]?.ToString(),
+                            Manufacturer = obj["MonitorManufacturer"]?.ToString(),
+                            SerialNumber = obj["DeviceID"]?.ToString(),
+                            Resolution = (obj["ScreenWidth"] != null && obj["ScreenHeight"] != null)
+                                ? $"{obj["ScreenWidth"]}x{obj["ScreenHeight"]}"
+                                : null,
+                            ConnectionType = null // Nicht direkt verfügbar
+                        });
+                    }
+                }
+            }
+            catch { }
+            return monitors;
+        }
+
         public PcInformation GetAllPcInformation()
         {
             // Collects all hardware information into one object
@@ -192,7 +266,10 @@ namespace PC_Specs.Services
                 MainBoard = GetMainboardDetails(),
                 RamModules = GetRamModulesDetails(),
                 Gpus = GetGpuDetails(),
-                StorageDevices = GetStorageDetails()
+                StorageDevices = GetStorageDetails(),
+                NetworkAdapters = GetNetworkAdapterDetails(),
+                AudioDevices = GetAudioDeviceDetails(),
+                Monitors = GetMonitorDetails()
             };
             return pcInfo;
         }
