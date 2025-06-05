@@ -1,0 +1,59 @@
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+*.log
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# Rider settings
+.idea/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+# NuGet v3
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Others
+*.dbmdl
+*.bak
+*.cache
+*.pdb
+
+# Publish output
+publish/
+out/
+
+# Test results
+TestResults/
+*.trx
+
+# Local history for some IDEs
+.localhistory/
+
+# Windows image file caches
+*.jfif
+
+# Exclude OneDrive temp files
+~$*
+
+# Exclude solution-level .vs folder
+.vs/
