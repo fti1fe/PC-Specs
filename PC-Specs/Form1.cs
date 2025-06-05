@@ -141,6 +141,58 @@ namespace PC_Specs
                     sb.AppendLine($"    Media Type: {s.MediaType}");
                 }
             }
+            sb.AppendLine();
+
+            // Audio Devices
+            sb.AppendLine("Audio Devices:");
+            if (info.AudioDevices != null)
+            {
+                int i = 1;
+                foreach (var audio in info.AudioDevices)
+                {
+                    sb.AppendLine($"  Device {i++}:");
+                    sb.AppendLine($"    Name: {audio.Name}");
+                    sb.AppendLine($"    Manufacturer: {audio.Manufacturer}");
+                    sb.AppendLine($"    Type: {audio.DeviceType}");
+                    sb.AppendLine($"    Device ID: {audio.DeviceId}");
+                }
+            }
+            sb.AppendLine();
+
+            // Network Adapters
+            sb.AppendLine("Network Adapters:");
+            if (info.NetworkAdapters != null)
+            {
+                int i = 1;
+                foreach (var net in info.NetworkAdapters)
+                {
+                    sb.AppendLine($"  Adapter {i++}:");
+                    sb.AppendLine($"    Name: {net.Name}");
+                    sb.AppendLine($"    Manufacturer: {net.Manufacturer}");
+                    sb.AppendLine($"    MAC Address: {net.MacAddress}");
+                    sb.AppendLine($"    Type: {net.AdapterType}");
+                    sb.AppendLine($"    IP Address: {net.IpAddress}");
+                }
+            }
+            sb.AppendLine();
+
+            // Monitors
+            sb.AppendLine("Monitors:");
+            if (info.Monitors != null)
+            {
+                int i = 1;
+                foreach (var mon in info.Monitors)
+                {
+                    sb.AppendLine($"  Monitor {i++}:");
+                    sb.AppendLine($"    Name: {mon.Name}");
+                    sb.AppendLine($"    Manufacturer: {mon.Manufacturer}");
+                    sb.AppendLine($"    Serial Number: {mon.SerialNumber}");
+                    sb.AppendLine($"    Resolution: {mon.Resolution}");
+                    sb.AppendLine($"    Connection Type: {mon.ConnectionType}");
+                }
+            }
+            sb.AppendLine();
+
             return sb.ToString();
         }
     }
