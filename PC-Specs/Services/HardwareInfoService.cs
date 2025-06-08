@@ -64,7 +64,7 @@ namespace PC_Specs.Services
             return ramModules;
         }
 
-        // Helper for RAM FormFactor
+        // Returns a string representation for RAM form factor
         private string GetFormFactorString(int formFactor)
         {
             switch (formFactor)
@@ -75,7 +75,7 @@ namespace PC_Specs.Services
             }
         }
 
-        // Helper for RAM MemoryType
+        // Returns a string representation for RAM memory type
         private string GetMemoryTypeString(int memoryType)
         {
             switch (memoryType)
@@ -197,7 +197,7 @@ namespace PC_Specs.Services
                             Manufacturer = obj["Manufacturer"]?.ToString(),
                             MacAddress = obj["MACAddress"]?.ToString(),
                             AdapterType = obj["AdapterType"]?.ToString(),
-                            // IP-Adresse ist nicht direkt in Win32_NetworkAdapter, daher leer lassen oder erweitern
+                            // IP address is not directly available in Win32_NetworkAdapter, so leave empty or extend if needed
                             IpAddress = null
                         });
                     }
@@ -220,7 +220,7 @@ namespace PC_Specs.Services
                         {
                             Name = obj["Name"]?.ToString(),
                             Manufacturer = obj["Manufacturer"]?.ToString(),
-                            DeviceType = "Output", // Win32_SoundDevice liefert keine Typen, daher als "Output" markieren
+                            DeviceType = "Output", // Win32_SoundDevice does not provide type, so mark as "Output"
                             DeviceId = obj["DeviceID"]?.ToString()
                         });
                     }
@@ -247,7 +247,7 @@ namespace PC_Specs.Services
                             Resolution = (obj["ScreenWidth"] != null && obj["ScreenHeight"] != null)
                                 ? $"{obj["ScreenWidth"]}x{obj["ScreenHeight"]}"
                                 : null,
-                            ConnectionType = null // Nicht direkt verfügbar
+                            ConnectionType = null // Not directly available
                         });
                     }
                 }
