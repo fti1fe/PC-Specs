@@ -19,12 +19,28 @@ namespace PC_Specs
         private Timer cpuClockUpdateTimer;
         private SplitContainer splitContainer;
         private Panel chartPanel;
-        private Panel buttonPanel; // Neues Feld für das Button-Panel
+        private Panel buttonPanel; // New field for the button panel
 
         private List<float> minClocks = new List<float>();
         private List<float> maxClocks = new List<float>();
         private List<float> lastClocks = new List<float>();
         private List<DateTime> chartStartTimes = new List<DateTime>();
+
+        private class ChartOverlayLabels
+        {
+            public Label MinLabel { get; set; }
+            public Label MaxLabel { get; set; }
+            public Label CurrentLabel { get; set; }
+        }
+        private List<ChartOverlayLabels> chartOverlayLabels = new List<ChartOverlayLabels>();
+
+        // Helper class for the overlay label block
+        private class ChartOverlayLabelBlock
+        {
+            public Label InfoLabel { get; set; }
+        }
+        // Stores overlay label blocks for each chart
+        private List<ChartOverlayLabelBlock> chartOverlayLabelBlocks = new List<ChartOverlayLabelBlock>();
 
         public Form1()
         {
@@ -34,14 +50,14 @@ namespace PC_Specs
 
         private void InitializeCustomUi()
         {
-            // Entferne bisherige Controls, die nicht mehr gebraucht werden
+            // Remove old controls that are not needed anymore
             foreach (Control ctrl in this.Controls)
             {
                 if (ctrl != headerPanel)
                     this.Controls.Remove(ctrl);
             }
 
-            // Panel für Buttons oben
+            // Panel for the buttons at the top
             buttonPanel = new Panel
             {
                 Dock = DockStyle.Top,
@@ -51,7 +67,7 @@ namespace PC_Specs
             this.Controls.Add(buttonPanel);
             buttonPanel.BringToFront();
 
-            // SplitContainer für links/rechts
+            // SplitContainer for left/right
             splitContainer = new SplitContainer
             {
                 Orientation = Orientation.Vertical,
@@ -61,10 +77,10 @@ namespace PC_Specs
             };
             this.Controls.Add(splitContainer);
             splitContainer.BringToFront();
-            // 30% links, 70% rechts
+            // 30% left, 70% right
             splitContainer.SplitterDistance = (int)(this.ClientSize.Width * 0.3);
 
-            // Linke Seite: Textbox für Daten
+            // Left side: Textbox for data
             txtOutput = new TextBox
             {
                 Multiline = true,
@@ -78,7 +94,7 @@ namespace PC_Specs
             };
             splitContainer.Panel1.Controls.Add(txtOutput);
 
-            // Rechte Seite: Panel für Charts (mit eigenem Scrollbar)
+            // Right side: Panel for charts (with its own scrollbar)
             chartPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -87,7 +103,7 @@ namespace PC_Specs
             };
             splitContainer.Panel2.Controls.Add(chartPanel);
 
-            // Buttons im Button-Panel
+            // Buttons in the button panel
             btnLoadSpecs = new Button
             {
                 Text = "Load Specs",
@@ -122,25 +138,37 @@ namespace PC_Specs
             btnUpdateAllData.Click += BtnUpdateAllData_Click;
             buttonPanel.Controls.Add(btnUpdateAllData);
 
-            // Initial keine Charts
+            // No charts at the start
             CreateCpuCoreCharts(0);
         }
 
         private void CreateCpuCoreCharts(int coreCount)
         {
-            // Entferne alte Charts
+            // Remove old charts and labels
             foreach (var chart in cpuCoreCharts)
                 chartPanel.Controls.Remove(chart);
+            if (chartOverlayLabelBlocks != null)
+            {
+                foreach (var overlay in chartOverlayLabelBlocks)
+                {
+                    if (overlay != null)
+                    {
+                        chartPanel.Controls.Remove(overlay.InfoLabel);
+                    }
+                }
+            }
             cpuCoreCharts.Clear();
             minClocks.Clear();
             maxClocks.Clear();
             lastClocks.Clear();
             chartStartTimes.Clear();
+            chartOverlayLabelBlocks.Clear();
 
             int startY = 10;
             int chartHeight = 100;
-            int chartWidth = 420;
+            int chartWidth = 420; // Fixed width
             int left = 10;
+            int labelOffset = 0; // Directly next to chart
             for (int i = 0; i < coreCount; i++)
             {
                 var chart = new Chart
@@ -149,7 +177,7 @@ namespace PC_Specs
                     Height = chartHeight,
                     Left = left,
                     Top = startY + i * (chartHeight + 30),
-                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left, // Only anchor top and left
                     BackColor = System.Drawing.Color.Black
                 };
                 var chartArea = new ChartArea();
@@ -162,7 +190,6 @@ namespace PC_Specs
                 chartArea.AxisY.MajorGrid.LineColor = System.Drawing.Color.FromArgb(40, 255, 255, 255);
                 chartArea.AxisX.MajorGrid.LineColor = System.Drawing.Color.FromArgb(40, 255, 255, 255);
                 chartArea.BackColor = System.Drawing.Color.Black;
-                // Mehr Rand links/rechts
                 chartArea.Position = new ElementPosition(5, 10, 90, 80);
                 chartArea.InnerPlotPosition = new ElementPosition(10, 5, 80, 85);
                 chartArea.AxisX.LabelStyle.Angle = 0;
@@ -177,57 +204,106 @@ namespace PC_Specs
                 };
                 chart.Series.Add(series);
                 chart.Legends.Clear();
-                chart.PostPaint += (s, e) => DrawChartOverlay(e, i);
+                var chartTitle = new Title($"CPU{(i + 1)} Clock, MHz", Docking.Top, new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold), System.Drawing.Color.LightGray);
+                chart.Titles.Add(chartTitle);
                 chartPanel.Controls.Add(chart);
                 cpuCoreCharts.Add(chart);
                 minClocks.Add(float.MaxValue);
                 maxClocks.Add(float.MinValue);
                 lastClocks.Add(0);
                 chartStartTimes.Add(DateTime.Now);
+
+                // Overlay label to the right of the chart, values stacked vertically
+                var infoLabel = new Label
+                {
+                    AutoSize = false,
+                    Width = 110,
+                    Height = 54,
+                    TextAlign = System.Drawing.ContentAlignment.TopLeft,
+                    ForeColor = System.Drawing.Color.Black,
+                    BackColor = System.Drawing.Color.White,
+                    Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold),
+                    Left = chart.Left + chart.Width + labelOffset,
+                    Top = chart.Top + chart.Height / 2 - 27,
+                    Parent = chartPanel,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Padding = new Padding(6, 2, 6, 2)
+                };
+                chartPanel.Controls.Add(infoLabel);
+                chartOverlayLabelBlocks.Add(new ChartOverlayLabelBlock { InfoLabel = infoLabel });
             }
         }
 
-        private void DrawChartOverlay(ChartPaintEventArgs e, int coreIdx)
+        private void UpdateChartOverlayLabels()
+        {
+            for (int i = 0; i < chartOverlayLabels.Count; i++)
+            {
+                var overlay = chartOverlayLabels[i];
+                var min = minClocks[i] == float.MaxValue ? float.NaN : minClocks[i];
+                var max = maxClocks[i] == float.MinValue ? float.NaN : maxClocks[i];
+                var last = lastClocks[i];
+                overlay.MinLabel.Text = float.IsNaN(min) ? "Min : -" : $"Min : {min:F0}";
+                overlay.MaxLabel.Text = float.IsNaN(max) ? "Max : -" : $"Max : {max:F0}";
+                overlay.CurrentLabel.Text = float.IsNaN(last) ? "-" : $"{last:F0}";
+                // Adjust position if chart moves or gets bigger
+                var chart = cpuCoreCharts[i];
+                overlay.MinLabel.Left = chart.Left + 10;
+                overlay.MinLabel.Top = chart.Top + 5;
+                overlay.MaxLabel.Left = chart.Left + 80;
+                overlay.MaxLabel.Top = chart.Top + 5;
+                overlay.CurrentLabel.Left = chart.Left + chart.Width - 60;
+                overlay.CurrentLabel.Top = chart.Top + chart.Height / 2 - 10;
+            }
+        }
+
+        private void UpdateChartOverlayLabelBlocks()
+        {
+            for (int i = 0; i < chartOverlayLabelBlocks.Count; i++)
+            {
+                var overlay = chartOverlayLabelBlocks[i];
+                var min = minClocks[i] == float.MaxValue ? float.NaN : minClocks[i];
+                var max = maxClocks[i] == float.MinValue ? float.NaN : maxClocks[i];
+                var last = lastClocks[i];
+                overlay.InfoLabel.Text = $"Min: {(float.IsNaN(min) ? "-" : min.ToString("F0"))}{Environment.NewLine}Max: {(float.IsNaN(max) ? "-" : max.ToString("F0"))}{Environment.NewLine}Current: {(float.IsNaN(last) ? "-" : last.ToString("F0"))}";
+                // Always position directly to the right of the chart
+                var chart = cpuCoreCharts[i];
+                overlay.InfoLabel.Left = chart.Left + chart.Width;
+                overlay.InfoLabel.Top = chart.Top + chart.Height / 2 - overlay.InfoLabel.Height / 2;
+            }
+        }
+
+        // Draw overlay in the PostPaint event (ChartGraphics!)
+        private void DrawChartOverlayPostPaint(ChartPaintEventArgs e, Chart chart, int coreIdx)
         {
             if (coreIdx < 0 || coreIdx >= minClocks.Count || coreIdx >= maxClocks.Count || coreIdx >= lastClocks.Count)
                 return;
-            var chart = e.Chart;
             var area = chart.ChartAreas[0];
             var g = e.ChartGraphics.Graphics;
-            var font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            var min = minClocks[coreIdx];
-            var max = maxClocks[coreIdx];
+            var font = new System.Drawing.Font("Segoe UI", 8, System.Drawing.FontStyle.Bold);
+            var min = minClocks[coreIdx] == float.MaxValue ? float.NaN : minClocks[coreIdx];
+            var max = maxClocks[coreIdx] == float.MinValue ? float.NaN : maxClocks[coreIdx];
             var last = lastClocks[coreIdx];
 
-            // Koordinaten im Plotbereich
-            float right = area.Position.X + area.Position.Width;
-            float bottom = area.Position.Y + area.Position.Height;
-            var absTopLeft = e.ChartGraphics.GetAbsolutePoint(new System.Drawing.PointF(area.Position.X, area.Position.Y));
-            var absTopRight = e.ChartGraphics.GetAbsolutePoint(new System.Drawing.PointF(right, area.Position.Y));
-            // Min/Max links oben
-            var minStr = $"Min : {min:F0}";
-            var maxStr = $"Max : {max:F0}";
+            // Coordinates in the chart control (not ChartGraphics!)
+            var caRect = chart.ClientRectangle;
+            float margin = 8f;
+            float topY = caRect.Top + margin;
+            float leftX = caRect.Left + margin;
+            float rightX = caRect.Right - margin;
+
+            // Min/Max at the top left
+            var minStr = float.IsNaN(min) ? "Min : -" : $"Min : {min:F0}";
+            var maxStr = float.IsNaN(max) ? "Max : -" : $"Max : {max:F0}";
             var minSize = g.MeasureString(minStr, font);
-            g.DrawString(minStr, font, System.Drawing.Brushes.Lime, absTopLeft.X + 5, absTopLeft.Y + 5);
-            g.DrawString(maxStr, font, System.Drawing.Brushes.Red, absTopLeft.X + 15 + minSize.Width, absTopLeft.Y + 5);
-            // Titel oben rechts
-            var title = "CPU clock, MHz";
-            var titleSize = g.MeasureString(title, font);
-            g.DrawString(title, font, System.Drawing.Brushes.LightGray, absTopRight.X - titleSize.Width - 10, absTopRight.Y + 5);
-            // Aktueller Wert rechts neben der Linie (letzter Punkt)
-            var valueStr = $"{last:F0}";
+            g.DrawString(minStr, font, new System.Drawing.SolidBrush(System.Drawing.Color.Lime), leftX, topY);
+            g.DrawString(maxStr, font, new System.Drawing.SolidBrush(System.Drawing.Color.Red), leftX + minSize.Width + 12, topY);
+
+            // Current value on the right, vertically centered
+            var valueStr = float.IsNaN(last) ? "-" : $"{last:F0}";
             var valueFont = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
             var valueSize = g.MeasureString(valueStr, valueFont);
-            var series = chart.Series[0];
-            if (series.Points.Count > 0)
-            {
-                var lastPoint = series.Points[series.Points.Count - 1];
-                double xVal = lastPoint.XValue;
-                double yVal = lastPoint.YValues[0];
-                var plotX = (float)area.AxisX.ValueToPixelPosition(xVal);
-                var plotY = (float)area.AxisY.ValueToPixelPosition(yVal);
-                g.DrawString(valueStr, valueFont, System.Drawing.Brushes.White, plotX + 10, plotY - valueSize.Height / 2);
-            }
+            float midY = caRect.Top + caRect.Height / 2 - valueSize.Height / 2;
+            g.DrawString(valueStr, valueFont, System.Drawing.Brushes.White, rightX - valueSize.Width, midY);
         }
 
         private void BtnLoadSpecs_Click(object sender, EventArgs e)
@@ -260,7 +336,7 @@ namespace PC_Specs
                 cpuClockUpdateTimer.Dispose();
             }
             cpuClockUpdateTimer = new Timer();
-            cpuClockUpdateTimer.Interval = 1000; // 1 Sekunde
+            cpuClockUpdateTimer.Interval = 1000; // 1 second
             cpuClockUpdateTimer.Tick += CpuClockUpdateTimer_Tick;
             cpuClockUpdateTimer.Start();
         }
@@ -277,20 +353,24 @@ namespace PC_Specs
                     float val = cpu.CoreClockRates[i];
                     var startTime = chartStartTimes[i];
                     double seconds = (DateTime.Now - startTime).TotalSeconds;
-                    // Rollender Buffer: Entferne alle Punkte < (seconds-10)
+                    // Rolling buffer: remove all points < (seconds-10)
                     while (series.Points.Count > 0 && series.Points[0].XValue < seconds - 10)
                         series.Points.RemoveAt(0);
                     series.Points.AddXY(seconds, val);
-                    // Min/Max/Last aktualisieren
+                    // Update min/max/last
+                    if (minClocks[i] == float.MaxValue) minClocks[i] = val;
+                    if (maxClocks[i] == float.MinValue) maxClocks[i] = val;
                     if (val < minClocks[i]) minClocks[i] = val;
                     if (val > maxClocks[i]) maxClocks[i] = val;
                     lastClocks[i] = val;
-                    // X-Achse immer 10s Fenster
+                    // X axis always 10s window
                     var area = chart.ChartAreas[0];
                     area.AxisX.Minimum = Math.Max(0, seconds - 10);
                     area.AxisX.Maximum = Math.Max(10, seconds);
                     chart.Invalidate();
                 }
+                UpdateChartOverlayLabels(); // Update labels
+                UpdateChartOverlayLabelBlocks(); // Update labels
             }
         }
 
@@ -318,7 +398,7 @@ namespace PC_Specs
                 sb.AppendLine($"  Socket: {info.Cpu.Socket}");
                 sb.AppendLine($"  L2 Cache: {info.Cpu.L2CacheSize} KB");
                 sb.AppendLine($"  L3 Cache: {info.Cpu.L3CacheSize} KB");
-                // Only show CPU Package temperature
+                // Only show CPU package temperature
                 if (info.Cpu.CoreTemperatures != null && info.Cpu.CoreTemperatures.Count > 0)
                 {
                     sb.AppendLine($"  CPU Temperature: {info.Cpu.CoreTemperatures[0]:F1} °C");
@@ -327,7 +407,7 @@ namespace PC_Specs
                 {
                     sb.AppendLine("  CPU Temperature: n/a");
                 }
-                // NEW: Show per-core clock rates
+                // Show per-core clock rates
                 if (info.Cpu.CoreClockRates != null && info.Cpu.CoreClockRates.Count > 0)
                 {
                     for (int i = 0; i < info.Cpu.CoreClockRates.Count; i++)
@@ -395,7 +475,7 @@ namespace PC_Specs
                     {
                         sb.AppendLine("    GPU Temperature: n/a");
                     }
-                    // NEW: GPU Clock Rates
+                    // GPU Clock Rates
                     if (gpu.ClockRates != null && gpu.ClockRates.Count > 0)
                     {
                         foreach (var clk in gpu.ClockRates)

@@ -2,7 +2,7 @@
 
 ## Required Packages (.NET 8.0 Windows)
 
-| Package                                 | Version                  |
+| Package                                  | Version                  |
 |------------------------------------------|--------------------------|
 | LibreHardwareMonitorLib                  | 0.9.4                    |
 | System.Data.SqlClient                    | 4.9.0                    |
