@@ -41,7 +41,7 @@ All available temperature sensors for each GPU will be listed with their names.
 ┌───────────────────────────────┐
 │ [X] CPU temperature           │
 │ [X] GPU temperatures          │
-│ [ ] Clock rates per CPU core  │
+│ [X] Clock rates per CPU core  │
 │ [ ] GPU clock rate            │
 │ [ ] VRAM clock rate           │
 │ [ ] More precise GPU model    │
