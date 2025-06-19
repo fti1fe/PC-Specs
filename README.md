@@ -1,5 +1,8 @@
 # PC Hardware Specification Tool Alpha
 
+> **Disclaimer:**  
+> This software is still very much under construction and should not be used at the moment. It is not reliable yet and is still being actively worked on.
+
 ## Overview
 This Windows application shows detailed hardware information about your computer. It uses Windows Management Instrumentation and LibreHardwareMonitor to collect data. LibreHardwareMonitor is used to read sensor data such as CPU temperature, which is not available through WMI alone. You can see details about your CPU, RAM, GPU, storage, motherboard, operating system, audio devices, network adapters, and monitors. The tool also lets you update the CPU temperature live.
 
