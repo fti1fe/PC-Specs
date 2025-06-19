@@ -10,9 +10,9 @@ namespace PC_Specs
     {
         private readonly HardwareInfoService hardwareService = new HardwareInfoService();
         private Button btnLoadSpecs;
-        private Button btnUpdateCpuTemp; // NEU
+        private Button btnUpdateAllData;
         private TextBox txtOutput;
-        private PcInformation lastPcInfo; // NEU
+        private PcInformation lastPcInfo;
 
         public Form1()
         {
@@ -33,16 +33,16 @@ namespace PC_Specs
             btnLoadSpecs.Click += BtnLoadSpecs_Click;
             this.Controls.Add(btnLoadSpecs);
 
-            // Button to update only CPU temperature
-            btnUpdateCpuTemp = new Button
+            // Button to update all hardware data
+            btnUpdateAllData = new Button
             {
-                Text = "Update CPU Temperature",
+                Text = "Update All Data",
                 Top = 10,
                 Left = btnLoadSpecs.Right + 10,
-                Width = 170
+                Width = 150
             };
-            btnUpdateCpuTemp.Click += BtnUpdateCpuTemp_Click;
-            this.Controls.Add(btnUpdateCpuTemp);
+            btnUpdateAllData.Click += BtnUpdateAllData_Click;
+            this.Controls.Add(btnUpdateAllData);
 
             // Large TextBox to display hardware data
             txtOutput = new TextBox
@@ -65,22 +65,10 @@ namespace PC_Specs
             txtOutput.Text = lastPcInfo != null ? FormatPcInformation(lastPcInfo) : "No data found.";
         }
 
-        private void BtnUpdateCpuTemp_Click(object sender, EventArgs e)
+        private void BtnUpdateAllData_Click(object sender, EventArgs e)
         {
-            if (lastPcInfo == null)
-            {
-                // If nothing loaded yet, load everything
-                BtnLoadSpecs_Click(sender, e);
-                return;
-            }
-            // Only update CPU temperature
-            var cpu = hardwareService.GetCpuDetails();
-            if (cpu != null)
-            {
-                lastPcInfo.Cpu.CoreTemperatures = cpu.CoreTemperatures;
-                // Optional: update more CPU fields if wanted
-            }
-            txtOutput.Text = FormatPcInformation(lastPcInfo);
+            lastPcInfo = hardwareService.GetAllPcInformation();
+            txtOutput.Text = lastPcInfo != null ? FormatPcInformation(lastPcInfo) : "No data found.";
         }
 
         private string FormatPcInformation(PcInformation info)
@@ -104,7 +92,6 @@ namespace PC_Specs
                 sb.AppendLine($"  Manufacturer: {info.Cpu.Manufacturer}");
                 sb.AppendLine($"  Cores: {info.Cpu.NumberOfCores}");
                 sb.AppendLine($"  Logical Processors: {info.Cpu.NumberOfLogicalProcessors}");
-                sb.AppendLine($"  Max Clock Speed: {info.Cpu.MaxClockSpeed} MHz");
                 sb.AppendLine($"  Socket: {info.Cpu.Socket}");
                 sb.AppendLine($"  L2 Cache: {info.Cpu.L2CacheSize} KB");
                 sb.AppendLine($"  L3 Cache: {info.Cpu.L3CacheSize} KB");
@@ -116,6 +103,18 @@ namespace PC_Specs
                 else
                 {
                     sb.AppendLine("  CPU Temperature: n/a");
+                }
+                // NEW: Show per-core clock rates
+                if (info.Cpu.CoreClockRates != null && info.Cpu.CoreClockRates.Count > 0)
+                {
+                    for (int i = 0; i < info.Cpu.CoreClockRates.Count; i++)
+                    {
+                        sb.AppendLine($"  Core {i + 1} Clock: {info.Cpu.CoreClockRates[i]:F0} MHz");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("  Core Clocks: n/a");
                 }
             }
             sb.AppendLine();
@@ -150,7 +149,7 @@ namespace PC_Specs
             }
             sb.AppendLine();
 
-            // GPUs
+            // GPUs:
             sb.AppendLine("GPUs:");
             if (info.Gpus != null)
             {
@@ -159,11 +158,9 @@ namespace PC_Specs
                 {
                     sb.AppendLine($"  GPU {i++}:");
                     sb.AppendLine($"    Name: {gpu.Name}");
-                    sb.AppendLine($"    RAM: {gpu.AdapterRAM / (1024 * 1024)} MB");
                     sb.AppendLine($"    Driver: {gpu.DriverVersion}");
                     sb.AppendLine($"    Processor: {gpu.VideoProcessor}");
-                    sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");
-                    // NEW: GPU Temperaturen
+                    sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");                    
                     if (gpu.Temperatures != null && gpu.Temperatures.Count > 0)
                     {
                         foreach (var t in gpu.Temperatures)
@@ -249,3 +246,4 @@ namespace PC_Specs
         }
     }
 }
+

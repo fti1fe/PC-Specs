@@ -9,7 +9,7 @@ This Windows application shows detailed hardware information about your computer
 - Supports detection of:
   - Processor details (cores, speed, manufacturer, socket, cache, temperature)
   - RAM modules (size, speed, form factor, type)
-  - Graphics cards (VRAM, driver version, CUDA support)
+  - Graphics cards (driver version, CUDA support)
   - Storage devices (capacity, interface type, media type)
   - Motherboard information
   - Operating system details
@@ -36,14 +36,14 @@ All available temperature sensors for each GPU will be listed with their names.
 
 ```
 ┌───────────────────────────────┐
-│ [X] CPU temperatures          │
+│ [X] CPU temperature           │
 │ [X] GPU temperatures          │
 │ [ ] Clock rates per CPU core  │
 │ [ ] GPU clock rate            │
 │ [ ] VRAM clock rate           │
 │ [ ] More precise GPU model    │
-│ [ ] Fix VRAM amount           │
 │ [ ] Fix CUDA                  │
 │ [ ] Fix monitor resolution    │
+│ [ ] Add VRAM amount           │
 └───────────────────────────────┘
 ```

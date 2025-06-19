@@ -33,5 +33,8 @@ namespace PC_Specs.Models
 
         // Optional: Temperature per core in degrees Celsius
         public List<float> CoreTemperatures { get; set; }
+
+        // Clock rate per core in MHz
+        public List<float> CoreClockRates { get; set; }
     }
 }

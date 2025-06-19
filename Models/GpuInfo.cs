@@ -23,5 +23,3 @@ namespace PC_Specs.Models
         public List<(string Name, float Value)> Temperatures { get; set; }
     }
 }
-
-

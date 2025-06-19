@@ -31,7 +31,8 @@ namespace PC_Specs.Services
                             Socket = obj["SocketDesignation"]?.ToString(),
                             L2CacheSize = obj["L2CacheSize"] != null ? Convert.ToUInt32(obj["L2CacheSize"]) : 0,
                             L3CacheSize = obj["L3CacheSize"] != null ? Convert.ToUInt32(obj["L3CacheSize"]) : 0,
-                            CoreTemperatures = GetCpuCoreTemperatures() // NEU
+                            CoreTemperatures = GetCpuCoreTemperatures(),
+                            CoreClockRates = GetCpuCoreClockRates()
                         };
                         break;
                     }
@@ -41,7 +42,6 @@ namespace PC_Specs.Services
             return cpu;
         }
 
-        // NEW: Read temperature per core with LibreHardwareMonitorLib
         // Read CPU Package temperature (with fallback) using LibreHardwareMonitorLib
         private List<float> GetCpuCoreTemperatures()
         {
@@ -93,9 +93,57 @@ namespace PC_Specs.Services
             return temps;
         }
 
+        // Read per-core clock rates using LibreHardwareMonitorLib
+        private List<float> GetCpuCoreClockRates()
+        {
+            var clocks = new List<float>();
+            try
+            {
+                Computer computer = new Computer
+                {
+                    IsCpuEnabled = true
+                };
+                computer.Open();
+                foreach (var hardware in computer.Hardware)
+                {
+                    if (hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.Cpu)
+                    {
+                        hardware.Update();
+                        // Find all "Clock" sensors with "Core #" in the name
+                        var coreClocks = hardware.Sensors
+                            .Where(s => s.SensorType == SensorType.Clock && s.Name.StartsWith("Core", StringComparison.OrdinalIgnoreCase) && s.Value.HasValue)
+                            .OrderBy(s => s.Name) // "Core #1", "Core #2", etc.
+                            .ToList();
+
+                        // If no per-core clocks, try "CPU Core" (average)
+                        if (coreClocks.Count > 0)
+                        {
+                            foreach (var sensor in coreClocks)
+                                clocks.Add(sensor.Value.Value);
+                        }
+                        else
+                        {
+                            // Fallback: try "CPU Core" or "Bus Speed"
+                            var cpuCoreClock = hardware.Sensors.FirstOrDefault(s =>
+                                s.SensorType == SensorType.Clock &&
+                                (s.Name.Equals("CPU Core", StringComparison.OrdinalIgnoreCase) ||
+                                 s.Name.Equals("Core", StringComparison.OrdinalIgnoreCase)) &&
+                                s.Value.HasValue);
+                            if (cpuCoreClock != null)
+                                clocks.Add(cpuCoreClock.Value.Value);
+                        }
+                        break;
+                    }
+                }
+                computer.Close();
+            }
+            catch { }
+            return clocks;
+        }
+
         public List<RamModuleInfo> GetRamModulesDetails()
         {
-            // Retrieves RAM modules information from Win32_PhysicalMemory
+            // Get RAM modules information from Win32_PhysicalMemory
             var ramModules = new List<RamModuleInfo>();
             try
             {
@@ -147,7 +195,7 @@ namespace PC_Specs.Services
 
         public MainBoardInfo GetMainboardDetails()
         {
-            // Retrieves mainboard information from Win32_BaseBoard
+            // Get mainboard information from Win32_BaseBoard
             try
             {
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_BaseBoard"))
@@ -170,11 +218,11 @@ namespace PC_Specs.Services
 
         public List<GpuInfo> GetGpuDetails()
         {
-            // Retrieves GPU information from Win32_VideoController
+            // Get GPU information from Win32_VideoController
             var gpus = new List<GpuInfo>();
             try
             {
-                // GPU Temperaturen auslesen (LibreHardwareMonitor)
+                // Read GPU temperatures (LibreHardwareMonitor)
                 var gpuTemps = GetGpuTemperaturesFromLHM();
 
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController"))
@@ -185,7 +233,6 @@ namespace PC_Specs.Services
                         var gpu = new GpuInfo
                         {
                             Name = obj["Name"]?.ToString(),
-                            AdapterRAM = obj["AdapterRAM"] != null ? Convert.ToUInt64(obj["AdapterRAM"]) : 0,
                             DriverVersion = obj["DriverVersion"]?.ToString(),
                             VideoProcessor = obj["VideoProcessor"]?.ToString(),
                             SupportsCuda = obj["VideoProcessor"] != null && obj["VideoProcessor"].ToString().ToLower().Contains("cuda"),
@@ -200,7 +247,9 @@ namespace PC_Specs.Services
             return gpus;
         }
 
-        // NEW: GPU Temperaturen auslesen (alle Sensoren, pro GPU)
+        // Remove GetGpuVramFromLHM()
+
+        // Read GPU temperatures (all sensors, for each GPU)
         private List<List<(string Name, float Value)>> GetGpuTemperaturesFromLHM()
         {
             var result = new List<List<(string, float)>>();
@@ -237,7 +286,7 @@ namespace PC_Specs.Services
 
         public List<StorageInfo> GetStorageDetails()
         {
-            // Retrieves storage information from Win32_DiskDrive
+            // Get storage information from Win32_DiskDrive
             var storages = new List<StorageInfo>();
             try
             {
@@ -261,7 +310,7 @@ namespace PC_Specs.Services
 
         public OperatingSystemInfo GetOperatingSystemDetails()
         {
-            // Retrieves OS information from Win32_OperatingSystem
+            // Get OS information from Win32_OperatingSystem
             try
             {
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_OperatingSystem"))
@@ -296,7 +345,7 @@ namespace PC_Specs.Services
                             Manufacturer = obj["Manufacturer"]?.ToString(),
                             MacAddress = obj["MACAddress"]?.ToString(),
                             AdapterType = obj["AdapterType"]?.ToString(),
-                            // IP address is not directly available in Win32_NetworkAdapter, so leave empty or extend if needed
+                            // IP address is not directly available in Win32_NetworkAdapter, so leave empty or add if needed
                             IpAddress = null
                         });
                     }
@@ -391,3 +440,4 @@ namespace PC_Specs.Services
         }
     }
 }
+
