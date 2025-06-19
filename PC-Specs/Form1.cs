@@ -178,7 +178,7 @@ namespace PC_Specs
                     sb.AppendLine($"    Name: {gpu.Name}");
                     sb.AppendLine($"    Driver: {gpu.DriverVersion}");
                     sb.AppendLine($"    Processor: {gpu.VideoProcessor}");
-                    sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");                    
+                    sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");
                     if (gpu.Temperatures != null && gpu.Temperatures.Count > 0)
                     {
                         foreach (var t in gpu.Temperatures)
@@ -189,6 +189,18 @@ namespace PC_Specs
                     else
                     {
                         sb.AppendLine("    GPU Temperature: n/a");
+                    }
+                    // NEW: GPU Clock Rates
+                    if (gpu.ClockRates != null && gpu.ClockRates.Count > 0)
+                    {
+                        foreach (var clk in gpu.ClockRates)
+                        {
+                            sb.AppendLine($"    {clk.Name} Clock: {clk.Value:F0} MHz");
+                        }
+                    }
+                    else
+                    {
+                        sb.AppendLine("    GPU Clock: n/a");
                     }
                 }
             }

@@ -21,6 +21,9 @@ namespace PC_Specs.Models
 
         // List of available temperature sensors (name + value)
         public List<(string Name, float Value)> Temperatures { get; set; }
+
+        // List of available GPU clock rates (name + value), e.g. Core, Memory, Shader, etc.
+        public List<(string Name, float Value)> ClockRates { get; set; }
     }
 }
 

@@ -224,6 +224,8 @@ namespace PC_Specs.Services
             {
                 // Read GPU temperatures (LibreHardwareMonitor)
                 var gpuTemps = GetGpuTemperaturesFromLHM();
+                // Read GPU clock rates (LibreHardwareMonitor)
+                var gpuClocks = GetGpuClockRatesFromLHM();
 
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController"))
                 {
@@ -236,7 +238,8 @@ namespace PC_Specs.Services
                             DriverVersion = obj["DriverVersion"]?.ToString(),
                             VideoProcessor = obj["VideoProcessor"]?.ToString(),
                             SupportsCuda = obj["VideoProcessor"] != null && obj["VideoProcessor"].ToString().ToLower().Contains("cuda"),
-                            Temperatures = gpuTemps.Count > idx ? gpuTemps[idx] : new List<(string, float)>()
+                            Temperatures = gpuTemps.Count > idx ? gpuTemps[idx] : new List<(string, float)>(),
+                            ClockRates = gpuClocks.Count > idx ? gpuClocks[idx] : new List<(string, float)>()
                         };
                         gpus.Add(gpu);
                         idx++;
@@ -246,8 +249,6 @@ namespace PC_Specs.Services
             catch { }
             return gpus;
         }
-
-        // Remove GetGpuVramFromLHM()
 
         // Read GPU temperatures (all sensors, for each GPU)
         private List<List<(string Name, float Value)>> GetGpuTemperaturesFromLHM()
@@ -276,6 +277,41 @@ namespace PC_Specs.Services
                             }
                         }
                         result.Add(temps);
+                    }
+                }
+                computer.Close();
+            }
+            catch { }
+            return result;
+        }
+
+        // Read GPU clock rates (all sensors, for each GPU)
+        private List<List<(string Name, float Value)>> GetGpuClockRatesFromLHM()
+        {
+            var result = new List<List<(string, float)>>();
+            try
+            {
+                Computer computer = new Computer
+                {
+                    IsGpuEnabled = true
+                };
+                computer.Open();
+                foreach (var hardware in computer.Hardware)
+                {
+                    if (hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuNvidia ||
+                        hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuAmd ||
+                        hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuIntel)
+                    {
+                        hardware.Update();
+                        var clocks = new List<(string, float)>();
+                        foreach (var sensor in hardware.Sensors)
+                        {
+                            if (sensor.SensorType == LibreHardwareMonitor.Hardware.SensorType.Clock && sensor.Value.HasValue)
+                            {
+                                clocks.Add((sensor.Name, sensor.Value.Value));
+                            }
+                        }
+                        result.Add(clocks);
                     }
                 }
                 computer.Close();
