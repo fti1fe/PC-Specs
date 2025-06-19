@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Management;
 using PC_Specs.Models;
+using LibreHardwareMonitor.Hardware; // NEU
 
 namespace PC_Specs.Services
 {
@@ -12,14 +13,14 @@ namespace PC_Specs.Services
     {
         public CpuInfo GetCpuDetails()
         {
-            // Retrieves CPU information from Win32_Processor
+            CpuInfo cpu = null;
             try
             {
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_Processor"))
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        return new CpuInfo
+                        cpu = new CpuInfo
                         {
                             Name = obj["Name"]?.ToString(),
                             Manufacturer = obj["Manufacturer"]?.ToString(),
@@ -28,13 +29,48 @@ namespace PC_Specs.Services
                             MaxClockSpeed = obj["MaxClockSpeed"] != null ? Convert.ToUInt32(obj["MaxClockSpeed"]) : 0,
                             Socket = obj["SocketDesignation"]?.ToString(),
                             L2CacheSize = obj["L2CacheSize"] != null ? Convert.ToUInt32(obj["L2CacheSize"]) : 0,
-                            L3CacheSize = obj["L3CacheSize"] != null ? Convert.ToUInt32(obj["L3CacheSize"]) : 0
+                            L3CacheSize = obj["L3CacheSize"] != null ? Convert.ToUInt32(obj["L3CacheSize"]) : 0,
+                            CoreTemperatures = GetCpuCoreTemperatures() // NEU
                         };
+                        break;
                     }
                 }
             }
             catch { }
-            return null;
+            return cpu;
+        }
+
+        // NEU: Temperatur pro Kern mit LibreHardwareMonitorLib auslesen
+        private List<float> GetCpuCoreTemperatures()
+        {
+            var temps = new List<float>();
+            try
+            {
+                Computer computer = new Computer
+                {
+                    IsCpuEnabled = true
+                };
+                computer.Open();
+                foreach (var hardware in computer.Hardware)
+                {
+                    if (hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.Cpu)
+                    {
+                        hardware.Update();
+                        foreach (var sensor in hardware.Sensors)
+                        {
+                            if (sensor.SensorType == LibreHardwareMonitor.Hardware.SensorType.Temperature &&
+                                sensor.Name.StartsWith("Core"))
+                            {
+                                if (sensor.Value.HasValue)
+                                    temps.Add(sensor.Value.Value);
+                            }
+                        }
+                    }
+                }
+                computer.Close();
+            }
+            catch { }
+            return temps;
         }
 
         public List<RamModuleInfo> GetRamModulesDetails()

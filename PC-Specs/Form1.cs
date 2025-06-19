@@ -77,6 +77,19 @@ namespace PC_Specs
                 sb.AppendLine($"  Socket: {info.Cpu.Socket}");
                 sb.AppendLine($"  L2 Cache: {info.Cpu.L2CacheSize} KB");
                 sb.AppendLine($"  L3 Cache: {info.Cpu.L3CacheSize} KB");
+                // NEU: Kerntemperaturen anzeigen
+                if (info.Cpu.CoreTemperatures != null && info.Cpu.CoreTemperatures.Count > 0)
+                {
+                    int coreIdx = 1;
+                    foreach (var temp in info.Cpu.CoreTemperatures)
+                    {
+                        sb.AppendLine($"  Core {coreIdx++} Temp: {temp:F1} °C");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("  Core Temperatures: n/a");
+                }
             }
             sb.AppendLine();
 

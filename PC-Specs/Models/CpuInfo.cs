@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PC_Specs.Models
 {
     /// <summary>
@@ -28,5 +30,8 @@ namespace PC_Specs.Models
 
         // Optional: L3 cache size in KB
         public uint L3CacheSize { get; set; }
+
+        // Optional: Temperature per core in degrees Celsius
+        public List<float> CoreTemperatures { get; set; }
     }
 }
