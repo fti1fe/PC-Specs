@@ -26,9 +26,16 @@ namespace PC_Specs
             btnLoadSpecs = new Button
             {
                 Text = "Load Specs",
-                Top = 10,
-                Left = 10,
-                Width = 100
+                Top = headerPanel.Bottom + 20,
+                Left = 30,
+                Width = 120,
+                Height = 40,
+                Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = System.Drawing.Color.FromArgb(0, 120, 215),
+                ForeColor = System.Drawing.Color.White,
+                FlatAppearance = { BorderSize = 0 },
+                Cursor = Cursors.Hand
             };
             btnLoadSpecs.Click += BtnLoadSpecs_Click;
             this.Controls.Add(btnLoadSpecs);
@@ -37,9 +44,16 @@ namespace PC_Specs
             btnUpdateAllData = new Button
             {
                 Text = "Update All Data",
-                Top = 10,
-                Left = btnLoadSpecs.Right + 10,
-                Width = 150
+                Top = headerPanel.Bottom + 20,
+                Left = btnLoadSpecs.Right + 20,
+                Width = 160,
+                Height = 40,
+                Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = System.Drawing.Color.FromArgb(0, 120, 215),
+                ForeColor = System.Drawing.Color.White,
+                FlatAppearance = { BorderSize = 0 },
+                Cursor = Cursors.Hand
             };
             btnUpdateAllData.Click += BtnUpdateAllData_Click;
             this.Controls.Add(btnUpdateAllData);
@@ -49,12 +63,16 @@ namespace PC_Specs
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Both,
-                Top = btnLoadSpecs.Bottom + 10,
-                Left = 10,
-                Width = this.ClientSize.Width - 20,
-                Height = this.ClientSize.Height - btnLoadSpecs.Bottom - 30,
+                Top = btnLoadSpecs.Bottom + 20,
+                Left = 30,
+                Width = this.ClientSize.Width - 60,
+                Height = this.ClientSize.Height - btnLoadSpecs.Bottom - 50,
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                ReadOnly = true
+                ReadOnly = true,
+                BorderStyle = BorderStyle.None,
+                BackColor = System.Drawing.Color.White,
+                ForeColor = System.Drawing.Color.FromArgb(30, 30, 30),
+                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular)
             };
             this.Controls.Add(txtOutput);
         }

@@ -45,5 +45,6 @@ All available temperature sensors for each GPU will be listed with their names.
 │ [ ] Fix CUDA                  │
 │ [ ] Fix monitor resolution    │
 │ [ ] Add VRAM amount           │
+│ [ ] More comfortable UI       │
 └───────────────────────────────┘
 ```
