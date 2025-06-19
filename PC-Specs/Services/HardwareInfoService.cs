@@ -40,7 +40,8 @@ namespace PC_Specs.Services
             return cpu;
         }
 
-        // NEU: Temperatur pro Kern mit LibreHardwareMonitorLib auslesen
+        // NEW: Read temperature per core with LibreHardwareMonitorLib
+        // Read CPU Package temperature (with fallback) using LibreHardwareMonitorLib
         private List<float> GetCpuCoreTemperatures()
         {
             var temps = new List<float>();
@@ -56,13 +57,31 @@ namespace PC_Specs.Services
                     if (hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.Cpu)
                     {
                         hardware.Update();
+                        // Try to find "CPU Package" first
                         foreach (var sensor in hardware.Sensors)
                         {
                             if (sensor.SensorType == LibreHardwareMonitor.Hardware.SensorType.Temperature &&
-                                sensor.Name.StartsWith("Core"))
+                                (sensor.Name.Equals("CPU Package", StringComparison.OrdinalIgnoreCase) ||
+                                 sensor.Name.Equals("Package", StringComparison.OrdinalIgnoreCase)))
                             {
                                 if (sensor.Value.HasValue)
+                                {
                                     temps.Add(sensor.Value.Value);
+                                    break;
+                                }
+                            }
+                        }
+                        // Fallback: take first available temperature sensor if no package sensor found
+                        if (temps.Count == 0)
+                        {
+                            foreach (var sensor in hardware.Sensors)
+                            {
+                                if (sensor.SensorType == LibreHardwareMonitor.Hardware.SensorType.Temperature &&
+                                    sensor.Value.HasValue)
+                                {
+                                    temps.Add(sensor.Value.Value);
+                                    break;
+                                }
                             }
                         }
                     }

@@ -10,7 +10,9 @@ namespace PC_Specs
     {
         private readonly HardwareInfoService hardwareService = new HardwareInfoService();
         private Button btnLoadSpecs;
+        private Button btnUpdateCpuTemp; // NEU
         private TextBox txtOutput;
+        private PcInformation lastPcInfo; // NEU
 
         public Form1()
         {
@@ -31,6 +33,17 @@ namespace PC_Specs
             btnLoadSpecs.Click += BtnLoadSpecs_Click;
             this.Controls.Add(btnLoadSpecs);
 
+            // Button to update only CPU temperature
+            btnUpdateCpuTemp = new Button
+            {
+                Text = "Update CPU Temperature",
+                Top = 10,
+                Left = btnLoadSpecs.Right + 10,
+                Width = 170
+            };
+            btnUpdateCpuTemp.Click += BtnUpdateCpuTemp_Click;
+            this.Controls.Add(btnUpdateCpuTemp);
+
             // Large TextBox to display hardware data
             txtOutput = new TextBox
             {
@@ -48,8 +61,26 @@ namespace PC_Specs
 
         private void BtnLoadSpecs_Click(object sender, EventArgs e)
         {
-            var info = hardwareService.GetAllPcInformation();
-            txtOutput.Text = info != null ? FormatPcInformation(info) : "No data found.";
+            lastPcInfo = hardwareService.GetAllPcInformation();
+            txtOutput.Text = lastPcInfo != null ? FormatPcInformation(lastPcInfo) : "No data found.";
+        }
+
+        private void BtnUpdateCpuTemp_Click(object sender, EventArgs e)
+        {
+            if (lastPcInfo == null)
+            {
+                // If nothing loaded yet, load everything
+                BtnLoadSpecs_Click(sender, e);
+                return;
+            }
+            // Only update CPU temperature
+            var cpu = hardwareService.GetCpuDetails();
+            if (cpu != null)
+            {
+                lastPcInfo.Cpu.CoreTemperatures = cpu.CoreTemperatures;
+                // Optional: update more CPU fields if wanted
+            }
+            txtOutput.Text = FormatPcInformation(lastPcInfo);
         }
 
         private string FormatPcInformation(PcInformation info)
@@ -77,18 +108,14 @@ namespace PC_Specs
                 sb.AppendLine($"  Socket: {info.Cpu.Socket}");
                 sb.AppendLine($"  L2 Cache: {info.Cpu.L2CacheSize} KB");
                 sb.AppendLine($"  L3 Cache: {info.Cpu.L3CacheSize} KB");
-                // NEU: Kerntemperaturen anzeigen
+                // Only show CPU Package temperature
                 if (info.Cpu.CoreTemperatures != null && info.Cpu.CoreTemperatures.Count > 0)
                 {
-                    int coreIdx = 1;
-                    foreach (var temp in info.Cpu.CoreTemperatures)
-                    {
-                        sb.AppendLine($"  Core {coreIdx++} Temp: {temp:F1} °C");
-                    }
+                    sb.AppendLine($"  CPU Temperature: {info.Cpu.CoreTemperatures[0]:F1} °C");
                 }
                 else
                 {
-                    sb.AppendLine("  Core Temperatures: n/a");
+                    sb.AppendLine("  CPU Temperature: n/a");
                 }
             }
             sb.AppendLine();
