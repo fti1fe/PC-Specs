@@ -1,20 +1,23 @@
 # PC Hardware Specification Tool Alpha
 
 ## Overview
-This Windows application retrieves and displays detailed hardware specifications of a computer system using Windows Management Instrumentation (WMI). Built with C# and .NET, it provides comprehensive information about key components including CPU, RAM, GPU, storage devices, motherboard, and operating system.
+This Windows application shows detailed hardware information about your computer. It uses Windows Management Instrumentation (WMI) and LibreHardwareMonitor to collect data. LibreHardwareMonitor is used to read sensor data such as CPU temperature, which is not available through WMI alone. You can see details about your CPU, RAM, GPU, storage, motherboard, operating system, audio devices, network adapters, and monitors. The tool also lets you update the CPU temperature live.
 
 ## Key Features
-- Retrieves hardware specifications via WMI queries
-- Displays information in a structured format
+- Collects hardware information using WMI and LibreHardwareMonitor
+- Shows all data in a clear, structured format
 - Supports detection of:
-  - Processor details (cores, speed, manufacturer)
-  - RAM modules (size, speed, form factor)
-  - Graphics cards (VRAM, driver version)
-  - Storage devices (capacity, interface type)
+  - Processor details (cores, speed, manufacturer, socket, cache, temperature)
+  - RAM modules (size, speed, form factor, type)
+  - Graphics cards (VRAM, driver version, CUDA support)
+  - Storage devices (capacity, interface type, media type)
   - Motherboard information
   - Operating system details
-  - (and more)
-- Byte size formatting for human-readable output
+  - Audio devices (name, manufacturer, type)
+  - Network adapters (name, MAC address, type)
+  - Monitors (name, manufacturer, serial, resolution)
+- Human-readable byte size formatting
+- Button to update CPU temperature without reloading all data
 
 ## PC Specs To Do
 
