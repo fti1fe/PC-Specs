@@ -5,16 +5,16 @@ namespace PC_Specs.Models
     /// </summary>
     public class MainBoardInfo
     {
-        // Manufacturer of the mainboard
+        // The company that made the mainboard
         public string Manufacturer { get; set; }
 
-        // Product/model name of the mainboard
+        // The product or model name of the mainboard
         public string Product { get; set; }
 
-        // Serial number of the mainboard
+        // The serial number of the mainboard
         public string SerialNumber { get; set; }
 
-        // Version of the mainboard
+        // The version of the mainboard
         public string Version { get; set; }
     }
 }

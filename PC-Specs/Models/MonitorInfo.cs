@@ -5,19 +5,19 @@ namespace PC_Specs.Models
     /// </summary>
     public class MonitorInfo
     {
-        // Name or model of the monitor
+        // The name or model of the monitor
         public string Name { get; set; }
 
-        // Manufacturer of the monitor
+        // The company that made the monitor
         public string Manufacturer { get; set; }
 
-        // Serial number of the monitor
+        // The serial number of the monitor
         public string SerialNumber { get; set; }
 
-        // Screen resolution, e.g. "1920x1080"
+        // The screen resolution, for example: "1920x1080"
         public string Resolution { get; set; }
 
-        // Optional: Connection type, e.g. "HDMI", "DisplayPort"
+        // (Optional) The connection type, for example: "HDMI", "DisplayPort"
         public string ConnectionType { get; set; }
     }
 }

@@ -5,25 +5,25 @@ namespace PC_Specs.Models
     /// </summary>
     public class RamModuleInfo
     {
-        // Slot label, e.g. "DIMM 0" or "ChannelA-DIMM0"
+        // The slot label, for example: "DIMM 0" or "ChannelA-DIMM0"
         public string DeviceLocator { get; set; }
 
-        // Module capacity in bytes
+        // The module capacity in bytes
         public ulong Capacity { get; set; }
 
-        // Module speed in MHz, e.g. 3200
+        // The module speed in MHz, for example: 3200
         public uint Speed { get; set; }
 
-        // Manufacturer of the module
+        // The company that made the module
         public string Manufacturer { get; set; }
 
-        // Part number of the module
+        // The part number of the module
         public string PartNumber { get; set; }
 
-        // Form factor, e.g. "DIMM", "SODIMM"
+        // The form factor, for example: "DIMM", "SODIMM"
         public string FormFactor { get; set; }
 
-        // Memory type, e.g. "DDR4"
+        // The memory type, for example: "DDR4"
         public string MemoryType { get; set; }
     }
 }

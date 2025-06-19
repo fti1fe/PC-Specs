@@ -1,4 +1,4 @@
-namespace PC_Specs.Models
+namespace PC_Specs
 {
     /// <summary>
     /// Holds information about a single audio device.

@@ -5,16 +5,16 @@ namespace PC_Specs.Models
     /// </summary>
     public class StorageInfo
     {
-        // Model name of the drive
+        // The model name of the drive
         public string Model { get; set; }
 
-        // Total capacity in bytes
+        // The total capacity in bytes
         public ulong Size { get; set; }
 
-        // Interface type, e.g. "SATA", "NVMe", "SCSI", "IDE"
+        // The interface type, for example: "SATA", "NVMe", "SCSI", "IDE"
         public string InterfaceType { get; set; }
 
-        // Media type, e.g. "Fixed hard disk media", "SSD"
+        // The media type, for example: "Fixed hard disk media", "SSD"
         public string MediaType { get; set; }
     }
 }

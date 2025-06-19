@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 using PC_Specs.Models;
 using PC_Specs.Services;
+using System.Collections.Generic;
 
 namespace PC_Specs
 {
@@ -13,6 +15,16 @@ namespace PC_Specs
         private Button btnUpdateAllData;
         private TextBox txtOutput;
         private PcInformation lastPcInfo;
+        private List<Chart> cpuCoreCharts = new List<Chart>();
+        private Timer cpuClockUpdateTimer;
+        private SplitContainer splitContainer;
+        private Panel chartPanel;
+        private Panel buttonPanel; // Neues Feld für das Button-Panel
+
+        private List<float> minClocks = new List<float>();
+        private List<float> maxClocks = new List<float>();
+        private List<float> lastClocks = new List<float>();
+        private List<DateTime> chartStartTimes = new List<DateTime>();
 
         public Form1()
         {
@@ -22,11 +34,64 @@ namespace PC_Specs
 
         private void InitializeCustomUi()
         {
-            // Button to load hardware data
+            // Entferne bisherige Controls, die nicht mehr gebraucht werden
+            foreach (Control ctrl in this.Controls)
+            {
+                if (ctrl != headerPanel)
+                    this.Controls.Remove(ctrl);
+            }
+
+            // Panel für Buttons oben
+            buttonPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 70,
+                BackColor = System.Drawing.Color.Transparent
+            };
+            this.Controls.Add(buttonPanel);
+            buttonPanel.BringToFront();
+
+            // SplitContainer für links/rechts
+            splitContainer = new SplitContainer
+            {
+                Orientation = Orientation.Vertical,
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.Transparent,
+                FixedPanel = FixedPanel.None
+            };
+            this.Controls.Add(splitContainer);
+            splitContainer.BringToFront();
+            // 30% links, 70% rechts
+            splitContainer.SplitterDistance = (int)(this.ClientSize.Width * 0.3);
+
+            // Linke Seite: Textbox für Daten
+            txtOutput = new TextBox
+            {
+                Multiline = true,
+                ScrollBars = ScrollBars.Both,
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                BorderStyle = BorderStyle.None,
+                BackColor = System.Drawing.Color.White,
+                ForeColor = System.Drawing.Color.FromArgb(30, 30, 30),
+                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular)
+            };
+            splitContainer.Panel1.Controls.Add(txtOutput);
+
+            // Rechte Seite: Panel für Charts (mit eigenem Scrollbar)
+            chartPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = System.Drawing.Color.White
+            };
+            splitContainer.Panel2.Controls.Add(chartPanel);
+
+            // Buttons im Button-Panel
             btnLoadSpecs = new Button
             {
                 Text = "Load Specs",
-                Top = headerPanel.Bottom + 20,
+                Top = 15,
                 Left = 30,
                 Width = 120,
                 Height = 40,
@@ -38,13 +103,12 @@ namespace PC_Specs
                 Cursor = Cursors.Hand
             };
             btnLoadSpecs.Click += BtnLoadSpecs_Click;
-            this.Controls.Add(btnLoadSpecs);
+            buttonPanel.Controls.Add(btnLoadSpecs);
 
-            // Button to update all hardware data
             btnUpdateAllData = new Button
             {
                 Text = "Update All Data",
-                Top = headerPanel.Bottom + 20,
+                Top = 15,
                 Left = btnLoadSpecs.Right + 20,
                 Width = 160,
                 Height = 40,
@@ -56,37 +120,178 @@ namespace PC_Specs
                 Cursor = Cursors.Hand
             };
             btnUpdateAllData.Click += BtnUpdateAllData_Click;
-            this.Controls.Add(btnUpdateAllData);
+            buttonPanel.Controls.Add(btnUpdateAllData);
 
-            // Large TextBox to display hardware data
-            txtOutput = new TextBox
+            // Initial keine Charts
+            CreateCpuCoreCharts(0);
+        }
+
+        private void CreateCpuCoreCharts(int coreCount)
+        {
+            // Entferne alte Charts
+            foreach (var chart in cpuCoreCharts)
+                chartPanel.Controls.Remove(chart);
+            cpuCoreCharts.Clear();
+            minClocks.Clear();
+            maxClocks.Clear();
+            lastClocks.Clear();
+            chartStartTimes.Clear();
+
+            int startY = 10;
+            int chartHeight = 100;
+            int chartWidth = 420;
+            int left = 10;
+            for (int i = 0; i < coreCount; i++)
             {
-                Multiline = true,
-                ScrollBars = ScrollBars.Both,
-                Top = btnLoadSpecs.Bottom + 20,
-                Left = 30,
-                Width = this.ClientSize.Width - 60,
-                Height = this.ClientSize.Height - btnLoadSpecs.Bottom - 50,
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                ReadOnly = true,
-                BorderStyle = BorderStyle.None,
-                BackColor = System.Drawing.Color.White,
-                ForeColor = System.Drawing.Color.FromArgb(30, 30, 30),
-                Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular)
-            };
-            this.Controls.Add(txtOutput);
+                var chart = new Chart
+                {
+                    Width = chartWidth,
+                    Height = chartHeight,
+                    Left = left,
+                    Top = startY + i * (chartHeight + 30),
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = System.Drawing.Color.Black
+                };
+                var chartArea = new ChartArea();
+                chartArea.AxisX.Title = "";
+                chartArea.AxisX.LabelStyle.Enabled = false;
+                chartArea.AxisY.Title = "";
+                chartArea.AxisY.Minimum = 0;
+                chartArea.AxisY.LabelStyle.ForeColor = System.Drawing.Color.LightGray;
+                chartArea.AxisX.LabelStyle.ForeColor = System.Drawing.Color.LightGray;
+                chartArea.AxisY.MajorGrid.LineColor = System.Drawing.Color.FromArgb(40, 255, 255, 255);
+                chartArea.AxisX.MajorGrid.LineColor = System.Drawing.Color.FromArgb(40, 255, 255, 255);
+                chartArea.BackColor = System.Drawing.Color.Black;
+                // Mehr Rand links/rechts
+                chartArea.Position = new ElementPosition(5, 10, 90, 80);
+                chartArea.InnerPlotPosition = new ElementPosition(10, 5, 80, 85);
+                chartArea.AxisX.LabelStyle.Angle = 0;
+                chartArea.AxisX.LabelStyle.IsStaggered = false;
+                chartArea.AxisX.IsLabelAutoFit = false;
+                chart.ChartAreas.Add(chartArea);
+                var series = new Series($"Core {i + 1}")
+                {
+                    ChartType = SeriesChartType.Line,
+                    BorderWidth = 2,
+                    Color = System.Drawing.Color.Lime
+                };
+                chart.Series.Add(series);
+                chart.Legends.Clear();
+                chart.PostPaint += (s, e) => DrawChartOverlay(e, i);
+                chartPanel.Controls.Add(chart);
+                cpuCoreCharts.Add(chart);
+                minClocks.Add(float.MaxValue);
+                maxClocks.Add(float.MinValue);
+                lastClocks.Add(0);
+                chartStartTimes.Add(DateTime.Now);
+            }
+        }
+
+        private void DrawChartOverlay(ChartPaintEventArgs e, int coreIdx)
+        {
+            if (coreIdx < 0 || coreIdx >= minClocks.Count || coreIdx >= maxClocks.Count || coreIdx >= lastClocks.Count)
+                return;
+            var chart = e.Chart;
+            var area = chart.ChartAreas[0];
+            var g = e.ChartGraphics.Graphics;
+            var font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
+            var min = minClocks[coreIdx];
+            var max = maxClocks[coreIdx];
+            var last = lastClocks[coreIdx];
+
+            // Koordinaten im Plotbereich
+            float right = area.Position.X + area.Position.Width;
+            float bottom = area.Position.Y + area.Position.Height;
+            var absTopLeft = e.ChartGraphics.GetAbsolutePoint(new System.Drawing.PointF(area.Position.X, area.Position.Y));
+            var absTopRight = e.ChartGraphics.GetAbsolutePoint(new System.Drawing.PointF(right, area.Position.Y));
+            // Min/Max links oben
+            var minStr = $"Min : {min:F0}";
+            var maxStr = $"Max : {max:F0}";
+            var minSize = g.MeasureString(minStr, font);
+            g.DrawString(minStr, font, System.Drawing.Brushes.Lime, absTopLeft.X + 5, absTopLeft.Y + 5);
+            g.DrawString(maxStr, font, System.Drawing.Brushes.Red, absTopLeft.X + 15 + minSize.Width, absTopLeft.Y + 5);
+            // Titel oben rechts
+            var title = "CPU clock, MHz";
+            var titleSize = g.MeasureString(title, font);
+            g.DrawString(title, font, System.Drawing.Brushes.LightGray, absTopRight.X - titleSize.Width - 10, absTopRight.Y + 5);
+            // Aktueller Wert rechts neben der Linie (letzter Punkt)
+            var valueStr = $"{last:F0}";
+            var valueFont = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
+            var valueSize = g.MeasureString(valueStr, valueFont);
+            var series = chart.Series[0];
+            if (series.Points.Count > 0)
+            {
+                var lastPoint = series.Points[series.Points.Count - 1];
+                double xVal = lastPoint.XValue;
+                double yVal = lastPoint.YValues[0];
+                var plotX = (float)area.AxisX.ValueToPixelPosition(xVal);
+                var plotY = (float)area.AxisY.ValueToPixelPosition(yVal);
+                g.DrawString(valueStr, valueFont, System.Drawing.Brushes.White, plotX + 10, plotY - valueSize.Height / 2);
+            }
         }
 
         private void BtnLoadSpecs_Click(object sender, EventArgs e)
         {
             lastPcInfo = hardwareService.GetAllPcInformation();
             txtOutput.Text = lastPcInfo != null ? FormatPcInformation(lastPcInfo) : "No data found.";
+            if (lastPcInfo?.Cpu?.CoreClockRates != null)
+            {
+                CreateCpuCoreCharts(lastPcInfo.Cpu.CoreClockRates.Count);
+                StartCpuClockUpdateTimer();
+            }
         }
 
         private void BtnUpdateAllData_Click(object sender, EventArgs e)
         {
             lastPcInfo = hardwareService.GetAllPcInformation();
             txtOutput.Text = lastPcInfo != null ? FormatPcInformation(lastPcInfo) : "No data found.";
+            if (lastPcInfo?.Cpu?.CoreClockRates != null)
+            {
+                CreateCpuCoreCharts(lastPcInfo.Cpu.CoreClockRates.Count);
+                StartCpuClockUpdateTimer();
+            }
+        }
+
+        private void StartCpuClockUpdateTimer()
+        {
+            if (cpuClockUpdateTimer != null)
+            {
+                cpuClockUpdateTimer.Stop();
+                cpuClockUpdateTimer.Dispose();
+            }
+            cpuClockUpdateTimer = new Timer();
+            cpuClockUpdateTimer.Interval = 1000; // 1 Sekunde
+            cpuClockUpdateTimer.Tick += CpuClockUpdateTimer_Tick;
+            cpuClockUpdateTimer.Start();
+        }
+
+        private void CpuClockUpdateTimer_Tick(object sender, EventArgs e)
+        {
+            var cpu = hardwareService.GetCpuDetails();
+            if (cpu?.CoreClockRates != null && cpuCoreCharts.Count == cpu.CoreClockRates.Count)
+            {
+                for (int i = 0; i < cpuCoreCharts.Count; i++)
+                {
+                    var chart = cpuCoreCharts[i];
+                    var series = chart.Series[0];
+                    float val = cpu.CoreClockRates[i];
+                    var startTime = chartStartTimes[i];
+                    double seconds = (DateTime.Now - startTime).TotalSeconds;
+                    // Rollender Buffer: Entferne alle Punkte < (seconds-10)
+                    while (series.Points.Count > 0 && series.Points[0].XValue < seconds - 10)
+                        series.Points.RemoveAt(0);
+                    series.Points.AddXY(seconds, val);
+                    // Min/Max/Last aktualisieren
+                    if (val < minClocks[i]) minClocks[i] = val;
+                    if (val > maxClocks[i]) maxClocks[i] = val;
+                    lastClocks[i] = val;
+                    // X-Achse immer 10s Fenster
+                    var area = chart.ChartAreas[0];
+                    area.AxisX.Minimum = Math.Max(0, seconds - 10);
+                    area.AxisX.Maximum = Math.Max(10, seconds);
+                    chart.Invalidate();
+                }
+            }
         }
 
         private string FormatPcInformation(PcInformation info)

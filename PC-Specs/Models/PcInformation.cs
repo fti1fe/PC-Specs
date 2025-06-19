@@ -7,34 +7,34 @@ namespace PC_Specs.Models
     /// </summary>
     public class PcInformation
     {
-        // Operating system info
+        // Info about the operating system
         public OperatingSystemInfo OperatingSystem { get; set; }
 
-        // CPU info
+        // Info about the CPU
         public CpuInfo Cpu { get; set; }
 
-        // Mainboard info
+        // Info about the mainboard
         public MainBoardInfo MainBoard { get; set; }
 
-        // List of RAM modules
+        // List of all RAM modules
         public List<RamModuleInfo> RamModules { get; set; }
 
-        // List of GPUs
+        // List of all GPUs
         public List<GpuInfo> Gpus { get; set; }
 
-        // List of storage devices
+        // List of all storage devices
         public List<StorageInfo> StorageDevices { get; set; }
 
-        // List of network adapters
+        // List of all network adapters
         public List<NetworkAdapterInfo> NetworkAdapters { get; set; }
 
-        // List of audio devices
+        // List of all audio devices
         public List<AudioDeviceInfo> AudioDevices { get; set; }
 
-        // List of monitors
+        // List of all monitors
         public List<MonitorInfo> Monitors { get; set; }
 
-        // Constructor initializes lists to avoid null references
+        // The constructor sets up the lists so they are not null
         public PcInformation()
         {
             RamModules = new List<RamModuleInfo>();

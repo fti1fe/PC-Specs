@@ -5,13 +5,13 @@ namespace PC_Specs.Models
     /// </summary>
     public class OperatingSystemInfo
     {
-        // Full name, e.g. "Microsoft Windows 11 Pro"
+        // The full name, for example: "Microsoft Windows 11 Pro"
         public string Caption { get; set; }
 
-        // Version number
+        // The version number
         public string Version { get; set; }
 
-        // OS architecture, e.g. "64-Bit"
+        // The OS architecture, for example: "64-Bit"
         public string OSArchitecture { get; set; }
     }
 }

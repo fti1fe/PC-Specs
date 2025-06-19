@@ -38,16 +38,18 @@ All available temperature sensors for each GPU will be listed with their names.
 ## PC Specs To Do
 
 ```
-┌───────────────────────────────┐
-│ [X] CPU temperature           │
-│ [X] GPU temperatures          │
-│ [ ] Clock rates per CPU core  │
-│ [ ] GPU clock rate            │
-│ [ ] VRAM clock rate           │
-│ [ ] More precise GPU model    │
-│ [ ] Fix CUDA                  │
-│ [ ] Fix monitor resolution    │
-│ [ ] Add VRAM amount           │
-│ [ ] More comfortable UI       │
-└───────────────────────────────┘
+┌──────────────────────────────────────┐
+│ [X] CPU temperature                 │
+│ [X] GPU temperatures                │
+│ [X] Add graphs for hardware data    │
+│ [ ] Make graphs look better         │
+│ [X] Clock rates per CPU core        │
+│ [X] GPU clock rate                  │
+│ [ ] VRAM clock rate                 │
+│ [ ] More precise GPU model          │
+│ [ ] Fix CUDA                        │
+│ [ ] Fix monitor resolution          │
+│ [ ] Add VRAM amount                 │
+│ [ ] Make the UI more comfortable    │
+└──────────────────────────────────────┘
 ```

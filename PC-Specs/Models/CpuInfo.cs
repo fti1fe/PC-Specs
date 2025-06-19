@@ -7,34 +7,34 @@ namespace PC_Specs.Models
     /// </summary>
     public class CpuInfo
     {
-        // Name of the CPU, e.g. "Intel Core i7-9700K"
+        // The name of the CPU, for example: "Intel Core i7-9700K"
         public string Name { get; set; }
 
-        // Manufacturer, e.g. "GenuineIntel"
+        // The company that made the CPU, for example: "GenuineIntel"
         public string Manufacturer { get; set; }
 
-        // Number of physical cores
+        // How many physical cores the CPU has
         public uint NumberOfCores { get; set; }
 
-        // Number of logical processors (threads)
+        // How many logical processors (threads) the CPU has
         public uint NumberOfLogicalProcessors { get; set; }
 
-        // Maximum clock speed in MHz
+        // The highest clock speed in MHz
         public uint MaxClockSpeed { get; set; }
 
-        // Optional: CPU socket name, e.g. "LGA1151"
+        // (Optional) The name of the CPU socket, for example: "LGA1151"
         public string Socket { get; set; }
 
-        // Optional: L2 cache size in KB
+        // (Optional) L2 cache size in KB
         public uint L2CacheSize { get; set; }
 
-        // Optional: L3 cache size in KB
+        // (Optional) L3 cache size in KB
         public uint L3CacheSize { get; set; }
 
-        // Optional: Temperature per core in degrees Celsius
+        // (Optional) The temperature of each core in degrees Celsius
         public List<float> CoreTemperatures { get; set; }
 
-        // Clock rate per core in MHz
+        // The clock rate of each core in MHz
         public List<float> CoreClockRates { get; set; }
     }
 }
