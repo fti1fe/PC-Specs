@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Management;
 using PC_Specs.Models;
 using LibreHardwareMonitor.Hardware; // NEU
+using System.Linq;
 
 namespace PC_Specs.Services
 {
@@ -139,6 +140,7 @@ namespace PC_Specs.Services
                 case 26: return "DDR4";
                 case 20: return "DDR";
                 case 21: return "DDR2";
+                case 34: return "DDR5";
                 default: return memoryType.ToString();
             }
         }
@@ -172,23 +174,65 @@ namespace PC_Specs.Services
             var gpus = new List<GpuInfo>();
             try
             {
+                // GPU Temperaturen auslesen (LibreHardwareMonitor)
+                var gpuTemps = GetGpuTemperaturesFromLHM();
+
                 using (var searcher = new ManagementObjectSearcher("select * from Win32_VideoController"))
                 {
+                    int idx = 0;
                     foreach (ManagementObject obj in searcher.Get())
                     {
-                        gpus.Add(new GpuInfo
+                        var gpu = new GpuInfo
                         {
                             Name = obj["Name"]?.ToString(),
                             AdapterRAM = obj["AdapterRAM"] != null ? Convert.ToUInt64(obj["AdapterRAM"]) : 0,
                             DriverVersion = obj["DriverVersion"]?.ToString(),
                             VideoProcessor = obj["VideoProcessor"]?.ToString(),
-                            SupportsCuda = obj["VideoProcessor"] != null && obj["VideoProcessor"].ToString().ToLower().Contains("cuda")
-                        });
+                            SupportsCuda = obj["VideoProcessor"] != null && obj["VideoProcessor"].ToString().ToLower().Contains("cuda"),
+                            Temperatures = gpuTemps.Count > idx ? gpuTemps[idx] : new List<(string, float)>()
+                        };
+                        gpus.Add(gpu);
+                        idx++;
                     }
                 }
             }
             catch { }
             return gpus;
+        }
+
+        // NEW: GPU Temperaturen auslesen (alle Sensoren, pro GPU)
+        private List<List<(string Name, float Value)>> GetGpuTemperaturesFromLHM()
+        {
+            var result = new List<List<(string, float)>>();
+            try
+            {
+                Computer computer = new Computer
+                {
+                    IsGpuEnabled = true
+                };
+                computer.Open();
+                foreach (var hardware in computer.Hardware)
+                {
+                    if (hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuNvidia ||
+                        hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuAmd ||
+                        hardware.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.GpuIntel)
+                    {
+                        hardware.Update();
+                        var temps = new List<(string, float)>();
+                        foreach (var sensor in hardware.Sensors)
+                        {
+                            if (sensor.SensorType == LibreHardwareMonitor.Hardware.SensorType.Temperature && sensor.Value.HasValue)
+                            {
+                                temps.Add((sensor.Name, sensor.Value.Value));
+                            }
+                        }
+                        result.Add(temps);
+                    }
+                }
+                computer.Close();
+            }
+            catch { }
+            return result;
         }
 
         public List<StorageInfo> GetStorageDetails()
@@ -294,14 +338,31 @@ namespace PC_Specs.Services
                 {
                     foreach (ManagementObject obj in searcher.Get())
                     {
+                        string deviceId = obj["DeviceID"]?.ToString();
+                        string resolution = null;
+
+                        // Try to match with System.Windows.Forms.Screen for real resolution
+                        foreach (var screen in System.Windows.Forms.Screen.AllScreens)
+                        {
+                            // DeviceName is like "\\.\DISPLAY1", DeviceID is like "DesktopMonitor1"
+                            if (screen.DeviceName.EndsWith(deviceId?.Replace("DesktopMonitor", "DISPLAY")))
+                            {
+                                resolution = $"{screen.Bounds.Width}x{screen.Bounds.Height}";
+                                break;
+                            }
+                        }
+                        // Fallback: use WMI fields if available
+                        if (resolution == null && obj["ScreenWidth"] != null && obj["ScreenHeight"] != null)
+                        {
+                            resolution = $"{obj["ScreenWidth"]}x{obj["ScreenHeight"]}";
+                        }
+
                         monitors.Add(new MonitorInfo
                         {
                             Name = obj["Name"]?.ToString(),
                             Manufacturer = obj["MonitorManufacturer"]?.ToString(),
                             SerialNumber = obj["DeviceID"]?.ToString(),
-                            Resolution = (obj["ScreenWidth"] != null && obj["ScreenHeight"] != null)
-                                ? $"{obj["ScreenWidth"]}x{obj["ScreenHeight"]}"
-                                : null,
+                            Resolution = resolution,
                             ConnectionType = null // Not directly available
                         });
                     }

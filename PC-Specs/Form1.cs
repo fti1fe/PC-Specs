@@ -163,6 +163,18 @@ namespace PC_Specs
                     sb.AppendLine($"    Driver: {gpu.DriverVersion}");
                     sb.AppendLine($"    Processor: {gpu.VideoProcessor}");
                     sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");
+                    // NEW: GPU Temperaturen
+                    if (gpu.Temperatures != null && gpu.Temperatures.Count > 0)
+                    {
+                        foreach (var t in gpu.Temperatures)
+                        {
+                            sb.AppendLine($"    {t.Name} Temperature: {t.Value:F1} °C");
+                        }
+                    }
+                    else
+                    {
+                        sb.AppendLine("    GPU Temperature: n/a");
+                    }
                 }
             }
             sb.AppendLine();

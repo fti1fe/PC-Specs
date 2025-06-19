@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PC_Specs.Models
 {
     /// <summary>
@@ -19,5 +21,8 @@ namespace PC_Specs.Models
 
         // Indicates if CUDA is supported
         public bool SupportsCuda { get; set; }
+
+        // NEW: List of available temperature sensors (name + value)
+        public List<(string Name, float Value)> Temperatures { get; set; }
     }
 }
