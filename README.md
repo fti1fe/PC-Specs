@@ -15,3 +15,19 @@ This Windows application retrieves and displays detailed hardware specifications
   - Operating system details
   - (and more)
 - Byte size formatting for human-readable output
+
+## PC Specs To Do
+
+```
+┌───────────────────────────────┐
+│ [ ] CPU temperatures          │
+│ [ ] GPU temperatures          │
+│ [ ] Clock rates per CPU core  │
+│ [ ] GPU clock rate            │
+│ [ ] VRAM clock rate           │
+│ [ ] More precise GPU model    │
+│ [ ] Fix VRAM amount           │
+│ [ ] Fix CUDA                  │
+│ [ ] Fix monitor resolution    │
+└───────────────────────────────┘
+```
