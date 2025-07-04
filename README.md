@@ -21,6 +21,11 @@ This Windows application shows detailed hardware information about your computer
   - Monitors (name, manufacturer, serial, resolution)
 - Human-readable byte size formatting
 - Button to update CPU temperature without reloading all data
+- Displays detailed hardware information (CPU, GPU, RAM, storage, mainboard, network, audio, monitors)
+- Live CPU core clock graphs
+- NVIDIA GPU board partner and model detection (with PCI IDs)
+- Modern Windows Forms UI
+- Extensible model-service-UI architecture
 
 ### Supported GPU Temperature Sensors
 
@@ -54,3 +59,29 @@ All available temperature sensors for each GPU will be listed with their names.
 │ [ ] Make the UI more comfortable     │
 └──────────────────────────────────────┘
 ```
+
+## To-Do / Planned
+
+- More detailed sensor data (fan speeds, voltages)
+- Export to file (CSV, JSON)
+- More UI features (dark mode, search, etc.)
+
+## Requirements
+
+- .NET 8.0 (Windows)
+- NuGet: LibreHardwareMonitorLib, System.Management, System.Windows.Forms.DataVisualization, NvAPIWrapper.Net
+
+## Usage
+
+1. Build and run the solution in Visual Studio 2022 or newer.
+2. Click "Load Specs" to display hardware information.
+3. Use "Update All Data" to refresh.
+
+## Notes
+
+- Some features require admin rights for full sensor access.
+- NVIDIA board partner detection only works with NVIDIA GPUs and requires NvAPIWrapper.Net.
+
+## License
+
+See LICENSE file.

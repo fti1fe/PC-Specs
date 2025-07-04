@@ -461,6 +461,52 @@ namespace PC_Specs
                 {
                     sb.AppendLine($"  GPU {i++}:");
                     sb.AppendLine($"    Name: {gpu.Name}");
+
+
+                    // Explicit PCI Vendor/Device/Subsystem IDs for all GPUs
+                    if (gpu.VendorId.HasValue)
+                    {
+                        sb.AppendLine($"    Vendor ID: 0x{gpu.VendorId.Value:X4}");
+                        // Try to resolve vendor name for common IDs
+                        string vendorName = null;
+                        switch (gpu.VendorId.Value)
+                        {
+                            case 0x10DE:
+                                vendorName = "NVIDIA";
+                                break;
+                            case 0x1002:
+                                vendorName = "AMD";
+                                break;
+                            case 0x8086:
+                                vendorName = "Intel";
+                                break;
+                            default:
+                                vendorName = null;
+                                break;
+                        }
+                        if (!string.IsNullOrEmpty(vendorName))
+                            sb.AppendLine($"    Vendor Name: {vendorName}");
+                    }
+                    if (gpu.DeviceId.HasValue)
+                        sb.AppendLine($"    Device ID: 0x{gpu.DeviceId.Value:X4}");
+                    if (gpu.SubsystemVendorId.HasValue)
+                        sb.AppendLine($"    Subsystem Vendor ID: 0x{gpu.SubsystemVendorId.Value:X4}");
+                    if (gpu.SubsystemId.HasValue)
+                        sb.AppendLine($"    Subsystem ID: 0x{gpu.SubsystemId.Value:X4}");
+
+                    // NVIDIA-specific information
+                    if (gpu.IsNvidia)
+                    {
+                        if (!string.IsNullOrEmpty(gpu.BoardPartner) && gpu.BoardPartner != "Unknown")
+                        {
+                            sb.AppendLine($"    Board Partner: {gpu.BoardPartner}");
+                        }
+                        if (!string.IsNullOrEmpty(gpu.BoardModel))
+                        {
+                            sb.AppendLine($"    Board Model: {gpu.BoardModel}");
+                        }
+                    }
+
                     sb.AppendLine($"    Driver: {gpu.DriverVersion}");
                     sb.AppendLine($"    Processor: {gpu.VideoProcessor}");
                     sb.AppendLine($"    CUDA: {(gpu.SupportsCuda ? "Yes" : "No")}");

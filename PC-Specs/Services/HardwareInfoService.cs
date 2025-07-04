@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Management;
 using PC_Specs.Models;
 using LibreHardwareMonitor.Hardware; // NEU
+
 using System.Linq;
+using NvAPIWrapper;
+using NvAPIWrapper.GPU;
 
 namespace PC_Specs.Services
 {
@@ -247,7 +250,102 @@ namespace PC_Specs.Services
                 }
             }
             catch { }
+
+            // Extend NVIDIA GPU information
+            EnrichNvidiaGpuInfo(gpus);
             return gpus;
+        }
+
+        private void EnrichNvidiaGpuInfo(List<GpuInfo> gpus)
+        {
+            try
+            {
+                // Only initialize NvAPI if NVIDIA GPUs are present
+                bool hasNvidiaGpu = gpus.Any(g => g.Name != null && g.Name.ToUpper().Contains("NVIDIA"));
+                if (!hasNvidiaGpu)
+                    return;
+
+                NVIDIA.Initialize();
+                var physicalGPUs = PhysicalGPU.GetPhysicalGPUs();
+
+                foreach (var gpu in gpus)
+                {
+                    // Check if NVIDIA GPU
+                    if (gpu.Name != null && gpu.Name.ToUpper().Contains("NVIDIA"))
+                    {
+                        gpu.IsNvidia = true;
+                        // Remove "NVIDIA" from name for better matching
+                        string cleanGpuName = gpu.Name.Replace("NVIDIA", "").Trim();
+                        PhysicalGPU matchingNvGpu = null;
+                        // Try different matching strategies
+                        foreach (var nvGpu in physicalGPUs)
+                        {
+                            // Exact match
+                            if (nvGpu.FullName.Equals(cleanGpuName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                matchingNvGpu = nvGpu;
+                                break;
+                            }
+                            // Partial match
+                            else if (nvGpu.FullName.Contains(cleanGpuName) || cleanGpuName.Contains(nvGpu.FullName))
+                            {
+                                matchingNvGpu = nvGpu;
+                                break;
+                            }
+                        }
+                        // If not found and only one NVIDIA GPU present
+                        if (matchingNvGpu == null && physicalGPUs.Length == 1 && gpus.Count(g => g.IsNvidia) == 1)
+                        {
+                            matchingNvGpu = physicalGPUs[0];
+                        }
+                        if (matchingNvGpu != null)
+                        {
+                            try
+                            {
+                                // Try to get PCI IDs via reflection for compatibility with different NvAPIWrapper.Net versions
+                                try
+                                {
+                                    var t = matchingNvGpu.GetType();
+                                    object vendorIdObj = t.GetProperty("VendorId")?.GetValue(matchingNvGpu);
+                                    object deviceIdObj = t.GetProperty("DeviceId")?.GetValue(matchingNvGpu);
+                                    object subVendorIdObj = t.GetProperty("SubsystemVendorId")?.GetValue(matchingNvGpu);
+                                    object subIdObj = t.GetProperty("SubsystemId")?.GetValue(matchingNvGpu);
+                                    gpu.VendorId = vendorIdObj != null ? Convert.ToUInt32(vendorIdObj) : (uint?)null;
+                                    gpu.DeviceId = deviceIdObj != null ? Convert.ToUInt32(deviceIdObj) : (uint?)null;
+                                    gpu.SubsystemVendorId = subVendorIdObj != null ? Convert.ToUInt32(subVendorIdObj) : (uint?)null;
+                                    gpu.SubsystemId = subIdObj != null ? Convert.ToUInt32(subIdObj) : (uint?)null;
+                                }
+                                catch { }
+                                gpu.BoardPartner = NvidiaBoardPartnerMap.GetBoardPartnerName(gpu.SubsystemVendorId);
+                                if (gpu.BoardPartner != "Unknown" && gpu.BoardPartner != "NVIDIA (Founders Edition)")
+                                {
+                                    gpu.BoardModel = $"{gpu.BoardPartner} {matchingNvGpu.FullName}";
+                                }
+                                else
+                                {
+                                    gpu.BoardModel = matchingNvGpu.FullName;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Error getting NVIDIA GPU details for {gpu.Name}: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"NvAPI error: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    NVIDIA.Unload();
+                }
+                catch { }
+            }
         }
 
         // Read GPU temperatures (all sensors, for each GPU)

@@ -24,6 +24,15 @@ namespace PC_Specs.Models
 
         // List of all GPU clock rates (name and value), for example: Core, Memory, Shader, etc.
         public List<(string Name, float Value)> ClockRates { get; set; }
+
+        // NVIDIA-specific identification
+        public uint? VendorId { get; set; }
+        public uint? DeviceId { get; set; }
+        public uint? SubsystemVendorId { get; set; }
+        public uint? SubsystemId { get; set; }
+        public string BoardPartner { get; set; }
+        public string BoardModel { get; set; }
+        public bool IsNvidia { get; set; }
     }
 }
 
