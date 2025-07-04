@@ -57,3 +57,6 @@ TestResults/
 
 # Exclude solution-level .vs folder
 .vs/
+
+# Project documentation (do not commit)
+Documentation.md
