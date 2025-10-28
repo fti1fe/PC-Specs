@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Management;
 using PC_Specs.Models;
-using LibreHardwareMonitor.Hardware; // NEU
+using LibreHardwareMonitor.Hardware;
 
 using System.Linq;
 using NvAPIWrapper;
